@@ -14,7 +14,9 @@ DATABASE_URL = (
 
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace(
-        "postgres://", "postgresql://", 1
+        "postgres://",
+        "postgresql://",
+        1
     )
 
 
@@ -31,14 +33,17 @@ def get_db():
 
 
 def init_db():
+
     conn = get_db()
 
     with conn.cursor() as cur:
+
         cur.execute("""
             CREATE TABLE IF NOT EXISTS hosh_registrations (
                 id SERIAL PRIMARY KEY,
                 registration_code VARCHAR(20) UNIQUE NOT NULL,
                 fullname TEXT NOT NULL,
+                favorite_movie TEXT,
                 father_name TEXT NOT NULL,
                 province TEXT NOT NULL,
                 city TEXT NOT NULL,
@@ -55,6 +60,14 @@ def init_db():
             )
         """)
 
+        try:
+            cur.execute("""
+                ALTER TABLE hosh_registrations
+                ADD COLUMN favorite_movie TEXT
+            """)
+        except psycopg2.errors.DuplicateColumn:
+            conn.rollback()
+
     conn.commit()
     conn.close()
 
@@ -69,19 +82,64 @@ def register():
 
     if request.method == "POST":
 
-        fullname = request.form.get("fullname", "").strip()
-        father_name = request.form.get("father_name", "").strip()
-        province = request.form.get("province", "").strip()
-        city = request.form.get("city", "").strip()
-        national_id = request.form.get("national_id", "").strip()
-        age = request.form.get("age", "").strip()
-        birth_date = request.form.get("birth_date", "").strip()
-        father_phone = request.form.get("father_phone", "").strip()
-        phone = request.form.get("phone", "").strip()
-        school = request.form.get("school", "").strip()
-        grade = request.form.get("grade", "").strip()
-        address = request.form.get("address", "").strip()
-        postal_code = request.form.get("postal_code", "").strip()
+        favorite_movie = request.form.get(
+            "favorite_movie", ""
+        ).strip()
+
+        fullname = request.form.get(
+            "fullname", ""
+        ).strip()
+
+        father_name = request.form.get(
+            "father_name", ""
+        ).strip()
+
+        province = request.form.get(
+            "province", ""
+        ).strip()
+
+        city = request.form.get(
+            "city", ""
+        ).strip()
+
+        national_id = request.form.get(
+            "national_id", ""
+        ).strip()
+
+        age = request.form.get(
+            "age", ""
+        ).strip()
+
+        birth_date = request.form.get(
+            "birth_date", ""
+        ).strip()
+
+        father_phone = request.form.get(
+            "father_phone", ""
+        ).strip()
+
+        phone = request.form.get(
+            "phone", ""
+        ).strip()
+
+        school = request.form.get(
+            "school", ""
+        ).strip()
+
+        grade = request.form.get(
+            "grade", ""
+        ).strip()
+
+        address = request.form.get(
+            "address", ""
+        ).strip()
+
+        postal_code = request.form.get(
+            "postal_code", ""
+        ).strip()
+
+        if not favorite_movie:
+            return "فیلم دلخواه وارد نشده است."
 
         if not fullname:
             return "نام و نام خانوادگی وارد نشده است."
@@ -112,6 +170,7 @@ def register():
 
         try:
             age = int(age)
+
         except ValueError:
             return "سن باید عدد باشد."
 
@@ -120,11 +179,14 @@ def register():
         conn = get_db()
 
         try:
+
             with conn.cursor() as cur:
+
                 cur.execute("""
                     INSERT INTO hosh_registrations (
                         registration_code,
                         fullname,
+                        favorite_movie,
                         father_name,
                         province,
                         city,
@@ -139,12 +201,14 @@ def register():
                         postal_code
                     )
                     VALUES (
-                        %s, %s, %s, %s, %s, %s, %s,
-                        %s, %s, %s, %s, %s, %s, %s
+                        %s, %s, %s, %s, %s,
+                        %s, %s, %s, %s, %s,
+                        %s, %s, %s, %s, %s
                     )
                 """, (
                     code,
                     fullname,
+                    favorite_movie,
                     father_name,
                     province,
                     city,
@@ -159,7 +223,7 @@ def register():
                     postal_code
                 ))
 
-            conn.commit()
+                conn.commit()
 
         finally:
             conn.close()
@@ -177,7 +241,9 @@ def admin():
     conn = get_db()
 
     try:
+
         with conn.cursor() as cur:
+
             cur.execute("""
                 SELECT *
                 FROM hosh_registrations
@@ -195,13 +261,15 @@ def admin():
     )
 
 
-# ساخت جدول هنگام شروع برنامه
 with app.app_context():
     init_db()
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
+
+    port = int(
+        os.environ.get("PORT", 8080)
+    )
 
     app.run(
         host="0.0.0.0",
