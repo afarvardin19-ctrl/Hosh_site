@@ -1,18 +1,33 @@
-from flask import Flask, render_template, request, redirect
 import os
 import uuid
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from flask import Flask, render_template, request, redirect
 
 app = Flask(__name__)
 
-DATABASE_URL = os.environ.get("DATABASE_URL")
+DATABASE_URL = (
+    os.environ.get("DATABASE_URL")
+    or os.environ.get("POSTGRES_URL")
+    or os.environ.get("POSTGRESQL_URL")
+)
+
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace(
+        "postgres://", "postgresql://", 1
+    )
 
 
 def get_db():
     if not DATABASE_URL:
-        raise RuntimeError("DATABASE_URL تنظیم نشده است")
-    return psycopg2.connect(DATABASE_URL)
+        raise RuntimeError(
+            "DATABASE_URL در Environment سرویس Hosh-site-1 تنظیم نشده است."
+        )
+
+    return psycopg2.connect(
+        DATABASE_URL,
+        cursor_factory=RealDictCursor
+    )
 
 
 def init_db():
@@ -22,7 +37,7 @@ def init_db():
         cur.execute("""
             CREATE TABLE IF NOT EXISTS hosh_registrations (
                 id SERIAL PRIMARY KEY,
-                registration_code VARCHAR(20) NOT NULL,
+                registration_code VARCHAR(20) UNIQUE NOT NULL,
                 fullname TEXT NOT NULL,
                 father_name TEXT NOT NULL,
                 province TEXT NOT NULL,
@@ -51,6 +66,7 @@ def home():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+
     if request.method == "POST":
 
         fullname = request.form.get("fullname", "").strip()
@@ -103,10 +119,31 @@ def register():
 
         conn = get_db()
 
-        with conn.cursor() as cur:
-            cur.execute("""
-                INSERT INTO hosh_registrations (
-                    registration_code,
+        try:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO hosh_registrations (
+                        registration_code,
+                        fullname,
+                        father_name,
+                        province,
+                        city,
+                        national_id,
+                        age,
+                        birth_date,
+                        father_phone,
+                        phone,
+                        school,
+                        grade,
+                        address,
+                        postal_code
+                    )
+                    VALUES (
+                        %s, %s, %s, %s, %s, %s, %s,
+                        %s, %s, %s, %s, %s, %s, %s
+                    )
+                """, (
+                    code,
                     fullname,
                     father_name,
                     province,
@@ -120,30 +157,12 @@ def register():
                     grade,
                     address,
                     postal_code
-                )
-                VALUES (
-                    %s, %s, %s, %s, %s, %s, %s,
-                    %s, %s, %s, %s, %s, %s, %s
-                )
-            """, (
-                code,
-                fullname,
-                father_name,
-                province,
-                city,
-                national_id,
-                age,
-                birth_date,
-                father_phone,
-                phone,
-                school,
-                grade,
-                address,
-                postal_code
-            ))
+                ))
 
-        conn.commit()
-        conn.close()
+            conn.commit()
+
+        finally:
+            conn.close()
 
         return redirect(
             "https://esanj.ir/multiple-intelligences-inventory"
@@ -157,15 +176,18 @@ def admin():
 
     conn = get_db()
 
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
-        cur.execute("""
-            SELECT *
-            FROM hosh_registrations
-            ORDER BY id DESC
-        """)
-        students = cur.fetchall()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT *
+                FROM hosh_registrations
+                ORDER BY id DESC
+            """)
 
-    conn.close()
+            students = cur.fetchall()
+
+    finally:
+        conn.close()
 
     return render_template(
         "admin.html",
@@ -173,14 +195,16 @@ def admin():
     )
 
 
-# Render/Gunicorn imports app without executing this block,
-# so initialize the PostgreSQL table when the module loads.
-init_db()
+# ساخت جدول هنگام شروع برنامه
+with app.app_context():
+    init_db()
 
 
 if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))
+
     app.run(
         host="0.0.0.0",
-        port=int(os.environ.get("PORT", 8080)),
+        port=port,
         debug=False
     )
