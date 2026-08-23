@@ -1,9 +1,47 @@
 from flask import Flask, render_template, request, redirect
-import sqlite3
+import os
 import uuid
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 app = Flask(__name__)
-DB = "database.db"
+
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+
+def get_db():
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL تنظیم نشده است")
+    return psycopg2.connect(DATABASE_URL)
+
+
+def init_db():
+    conn = get_db()
+
+    with conn.cursor() as cur:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS hosh_registrations (
+                id SERIAL PRIMARY KEY,
+                registration_code VARCHAR(20) NOT NULL,
+                fullname TEXT NOT NULL,
+                father_name TEXT NOT NULL,
+                province TEXT NOT NULL,
+                city TEXT NOT NULL,
+                national_id TEXT NOT NULL,
+                age INTEGER NOT NULL,
+                birth_date TEXT NOT NULL,
+                father_phone TEXT,
+                phone TEXT NOT NULL,
+                school TEXT,
+                grade TEXT NOT NULL,
+                address TEXT,
+                postal_code TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+    conn.commit()
+    conn.close()
 
 
 @app.route("/")
@@ -63,11 +101,32 @@ def register():
 
         code = uuid.uuid4().hex[:8].upper()
 
-        conn = sqlite3.connect(DB)
+        conn = get_db()
 
-        conn.execute("""
-            INSERT INTO students (
-                registration_code,
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO hosh_registrations (
+                    registration_code,
+                    fullname,
+                    father_name,
+                    province,
+                    city,
+                    national_id,
+                    age,
+                    birth_date,
+                    father_phone,
+                    phone,
+                    school,
+                    grade,
+                    address,
+                    postal_code
+                )
+                VALUES (
+                    %s, %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s, %s, %s
+                )
+            """, (
+                code,
                 fullname,
                 father_name,
                 province,
@@ -81,24 +140,7 @@ def register():
                 grade,
                 address,
                 postal_code
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            code,
-            fullname,
-            father_name,
-            province,
-            city,
-            national_id,
-            age,
-            birth_date,
-            father_phone,
-            phone,
-            school,
-            grade,
-            address,
-            postal_code
-        ))
+            ))
 
         conn.commit()
         conn.close()
@@ -113,14 +155,15 @@ def register():
 @app.route("/admin")
 def admin():
 
-    conn = sqlite3.connect(DB)
-    conn.row_factory = sqlite3.Row
+    conn = get_db()
 
-    students = conn.execute("""
-        SELECT *
-        FROM students
-        ORDER BY id DESC
-    """).fetchall()
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("""
+            SELECT *
+            FROM hosh_registrations
+            ORDER BY id DESC
+        """)
+        students = cur.fetchall()
 
     conn.close()
 
@@ -130,9 +173,14 @@ def admin():
     )
 
 
+# Render/Gunicorn imports app without executing this block,
+# so initialize the PostgreSQL table when the module loads.
+init_db()
+
+
 if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
-        port=8080,
-        debug=True
+        port=int(os.environ.get("PORT", 8080)),
+        debug=False
     )
