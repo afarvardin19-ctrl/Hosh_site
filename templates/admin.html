@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>مدیریت ثبت‌نام‌ها</title>
+<style>
+body{background:#101010;color:white;font-family:Tahoma;margin:20px}
+h2{text-align:center}
+.wrap{overflow:auto}
+table{border-collapse:collapse;width:100%;min-width:1800px}
+th,td{border:1px solid #444;padding:9px;text-align:center;white-space:nowrap}
+th{background:#292929;color:#d8ae55}
+tr:nth-child(even){background:#181818}
+</style>
+</head>
+<body>
+<h2>📋 ثبت‌نام‌های هوش</h2>
+<p style="text-align:center">تعداد: {{ students|length }}</p>
+<div class="wrap">
+<table>
+<tr>
+<th>ID</th><th>کد ثبت‌نام</th><th>نام</th><th>نام پدر</th>
+<th>استان</th><th>شهر</th><th>کد ملی</th><th>سن</th>
+<th>تولد</th><th>تلفن پدر</th><th>موبایل</th><th>مدرسه</th>
+<th>پایه</th><th>آدرس</th><th>کد پستی</th><th>تاریخ ثبت</th>
+</tr>
+{% for s in students %}
+<tr>
+<td>{{s['id']}}</td><td>{{s['registration_code']}}</td>
+<td>{{s['fullname']}}</td><td>{{s['father_name']}}</td>
+<td>{{s['province']}}</td><td>{{s['city']}}</td>
+<td>{{s['national_id']}}</td><td>{{s['age']}}</td>
+<td>{{s['birth_date']}}</td><td>{{s['father_phone'] or '—'}}</td>
+<td>{{s['phone']}}</td><td>{{s['school'] or '—'}}</td>
+<td>{{s['grade']}}</td><td>{{s['address'] or '—'}}</td>
+<td>{{s['postal_code'] or '—'}}</td><td>{{s['created_at']}}</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+</body>
+</html>

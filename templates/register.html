@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>آزمون استعدادیابی ای‌سنج</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>آزمون استعدادیابی ای‌سنج</h1>
+
+<p class="subtitle">
+به آزمون استعدادیابی ای‌سنج خوش آمدید
+<br>
+لطفاً اطلاعات زیر را با دقت و به‌صورت کامل وارد کنید
+</p>
+
+<form method="POST" autocomplete="off">
+
+<label>نام و نام خانوادگی</label>
+<input name="fullname" required>
+
+<label>نام پدر</label>
+<input name="father_name" required>
+
+<label>استان</label>
+<input name="province" required>
+
+<label>شهر</label>
+<input name="city" required>
+
+<label>کد ملی</label>
+<input name="national_id" required>
+
+<label>سن</label>
+<input name="age" type="number" required>
+
+<label>تاریخ تولد</label>
+<input name="birth_date" placeholder="1390/01/01" required>
+
+<label>شماره تلفن پدر</label>
+<p style="font-size:13px;color:#777">اختیاری</p>
+<input name="father_phone">
+
+<label>شماره تلفن</label>
+<input name="phone" required>
+
+<label>نام مدرسه</label>
+<input name="school">
+
+<label>پایه تحصیلی</label>
+<select name="grade" required>
+<option>هفتم</option>
+<option>هشتم</option>
+<option>نهم</option>
+<option>دهم</option>
+<option>یازدهم</option>
+<option>دوازدهم</option>
+</select>
+<label>آدرس دقیق منزل</label>
+
+<p style="font-size:13px;color:#777;margin-top:-5px;">
+جهت ارسال نتیجه کارنامه و دریافت کتاب هدیه تقویت هوش
+</p>
+
+<textarea 
+name="address"
+placeholder="آدرس کامل منزل"
+rows="3"></textarea>
+
+
+<label>کد پستی</label>
+
+<input 
+type="text"
+name="postal_code"
+placeholder="کد پستی">
+<button type="submit">
+ثبت اطلاعات و شروع آزمون
+</button>
+
+</form>
+
+</div>
+
+</body>
+</html>
