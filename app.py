@@ -82,9 +82,6 @@ def register():
 
     if request.method == "POST":
 
-        favorite_movie = request.form.get(
-            "favorite_movie", ""
-        ).strip()
 
         fullname = request.form.get(
             "fullname", ""
@@ -138,8 +135,6 @@ def register():
             "postal_code", ""
         ).strip()
 
-        if not favorite_movie:
-            return "فیلم دلخواه وارد نشده است."
 
         if not fullname:
             return "نام و نام خانوادگی وارد نشده است."
@@ -186,7 +181,6 @@ def register():
                     INSERT INTO hosh_registrations (
                         registration_code,
                         fullname,
-                        favorite_movie,
                         father_name,
                         province,
                         city,
@@ -208,7 +202,6 @@ def register():
                 """, (
                     code,
                     fullname,
-                    favorite_movie,
                     father_name,
                     province,
                     city,
@@ -237,28 +230,38 @@ def register():
 
 @app.route("/admin")
 def admin():
-
     conn = get_db()
-
     try:
-
         with conn.cursor() as cur:
-
             cur.execute("""
                 SELECT *
                 FROM hosh_registrations
                 ORDER BY id DESC
             """)
-
             students = cur.fetchall()
-
     finally:
         conn.close()
 
-    return render_template(
-        "admin.html",
-        students=students
-    )
+    return render_template("admin.html", students=students)
+
+
+@app.route("/admin/delete/<int:student_id>", methods=["POST"])
+def delete_student(student_id):
+    conn = get_db()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "DELETE FROM hosh_registrations WHERE id = %s",
+                (student_id,)
+            )
+            conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+    return redirect("/admin")
 
 
 with app.app_context():
