@@ -178,29 +178,8 @@ def register():
             with conn.cursor() as cur:
 
                 cur.execute("""
-                    INSERT INTO hosh_registrations (
-                        registration_code,
-                        fullname,
-                        father_name,
-                        province,
-                        city,
-                        national_id,
-                        age,
-                        birth_date,
-                        father_phone,
-                        phone,
-                        school,
-                        grade,
-                        address,
-                        postal_code
-                    )
-                    VALUES (
-                        %s, %s, %s, %s, %s,
-                        %s, %s, %s, %s, %s,
-                        %s, %s, %s, %s, %s
-                    )
-                """, (
-                    code,
+                INSERT INTO hosh_registrations (
+                    registration_code,
                     fullname,
                     father_name,
                     province,
@@ -214,7 +193,27 @@ def register():
                     grade,
                     address,
                     postal_code
-                ))
+                )
+                VALUES (
+                    %s, %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s, %s, %s
+                )
+            """, (
+                code,
+                fullname,
+                father_name,
+                province,
+                city,
+                national_id,
+                age,
+                birth_date,
+                father_phone,
+                phone,
+                school,
+                grade,
+                address,
+                postal_code
+            ))
 
                 conn.commit()
 
