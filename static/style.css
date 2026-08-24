@@ -128,3 +128,11 @@ button,
 .notice {
     color: #68748a;
 }
+
+/* فقط رفع نمایش نام و نام پدر */
+input[name="fullname"],
+input[name="father_name"] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
